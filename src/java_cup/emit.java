@@ -1,7 +1,7 @@
 package java_cup;
 
-import java.io.PrintWriter;
 import java.util.Stack;
+import java.io.PrintWriter;
 import java.util.Enumeration;
 
 /** 
@@ -160,6 +160,9 @@ public class emit {
   /** List of imports (Strings containing class names) to go with actions. */
   public static Stack import_list = new Stack();
 
+  /** List of static imports */
+  public static Stack static_import_list = new Stack();
+
   /*. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .*/
 
   /** Number of conflict found while building tables. */
@@ -232,6 +235,7 @@ public class emit {
       _lr_values = true;
       action_code = null;
       import_list = new Stack();
+      static_import_list = new Stack();
       init_code = null;
       not_reduced = 0;
       num_conflicts = 0;
@@ -922,6 +926,8 @@ public class emit {
       /* user supplied imports */
       for (int i = 0; i < import_list.size(); i++)
 	out.println("import " + import_list.elementAt(i) + ";");
+        for (int i = 0; i < static_import_list.size(); i++)
+            out.println("import static" + static_import_list.elementAt(i) + ";");
       if (locations())
 	out.println("import java_cup.runtime.ComplexSymbolFactory.Location;");
   	out.println("import java_cup.runtime.XMLElement;");

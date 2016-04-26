@@ -17,6 +17,7 @@
     <mkdir dir="${java}" />
     <mkdir dir="${classes}" />
     <mkdir dir="${dist}" />
+    <property name="versionString" value="11c"/>
     <loadfile property="cupversion" srcFile="version.txt"/>
     <exec executable="svn" outputproperty="svnversion">
       <arg value="info"/>
@@ -67,23 +68,24 @@
     <copy todir="${java}"><fileset dir="${src}"></fileset></copy>
     <replace file="${java}/java_cup/version.java"
        token="+ version_str"
-       value='+ "v0.11b ${cupversion} (SVN rev ${svnversion})"'>
+       value='+ "v0.${versionString} ${cupversion} (SVN rev ${svnversion})"'>
     </replace>
     <javac srcdir="${java}" destdir="${classes}" verbose="off" listfiles="off" debug="on" source="1.8" target="1.8">
       <classpath refid="libraries"/>
     </javac>
   </target>
 
-  <target name="dist" depends="compile">
-   <jar jarfile="${dist}/java-cup-11b.jar" basedir="${classes}">
+
+    <target name="dist" depends="compile">
+   <jar jarfile="${dist}/java-cup-${versionString}.jar" basedir="${classes}">
       <manifest>
         <attribute name="Main-Class" value="java_cup/Main" />
-	<attribute name="Class-Path" value="java-cup-11b-runtime.jar" />
+	<attribute name="Class-Path" value="java-cup-${versionString}-runtime.jar" />
       </manifest>
     </jar>
-    <jar jarfile="${dist}/java-cup-11b-runtime.jar" basedir="${classes}" includes="java_cup/runtime/*">
+    <jar jarfile="${dist}/java-cup-${versionString}-runtime.jar" basedir="${classes}" includes="java_cup/runtime/*">
     </jar>
-   <tar longfile="gnu"  destfile="${dist}/java-cup-bin-11b-${cupversion}.tar.gz" compression="gzip">
+   <tar longfile="gnu"  destfile="${dist}/java-cup-bin-${versionString}-${cupversion}.tar.gz" compression="gzip">
      <tarfileset dir="${dist}" username="ant" group="ant">
        <depth max="0"/>
        <include name="*.jar"/>
@@ -92,7 +94,7 @@
   </target>
 
  <target name="src-dist" depends="dist">
-   <tar longfile="gnu"  destfile="${dist}/java-cup-src-11b-${cupversion}.tar.gz" compression="gzip">
+   <tar longfile="gnu"  destfile="${dist}/java-cup-src-${versionString}-${cupversion}.tar.gz" compression="gzip">
      <tarfileset dir="${src}" username="ant" group="ant" prefix="src/">
        <include name="**"/>
      </tarfileset>
@@ -116,7 +118,7 @@
   </target>
 
   <target name="test" depends="dist">
-    <java jar="${dist}/java-cup-11b.jar" fork="true">
+    <java jar="${dist}/java-cup-${versionString}.jar" fork="true">
         <arg value="-interface" />
         <arg value="${cup}/parser.cup" />
     </java>  
@@ -128,8 +130,8 @@
 
   <target name="scp" depends="src-dist">
     <exec executable="scp">
-      <arg value="${dist}/java-cup-src-11b-${cupversion}.tar.gz" />
-      <arg value="${dist}/java-cup-bin-11b-${cupversion}.tar.gz" />
+      <arg value="${dist}/java-cup-src-${versionString}-${cupversion}.tar.gz" />
+      <arg value="${dist}/java-cup-bin-${versionString}-${cupversion}.tar.gz" />
       <arg value="${dist}/../manual.html" />
       <arg value="petter@www2.in.tum.de:/srv/www/htdocs/projects/cup/releases" />
     </exec>
