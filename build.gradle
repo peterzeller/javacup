@@ -11,7 +11,7 @@ apply plugin: 'signing'
 
 // maven metadata:
 group = "com.github.peterzeller"
-version = "11c"
+version = "11c-SNAPSHOT"
 
 
 String src = "$projectDir/src"
@@ -155,8 +155,12 @@ artifacts {
     runtimeArchives sourcesRuntimeJar
 }
 
+def isReleaseBuild() {
+        return version.contains("SNAPSHOT") == false
+}
 
 signing {
+    required { isReleaseBuild() && gradle.taskGraph.hasTask("uploadArchives") }
     sign configurations.archives
     sign configurations.runtimeArchives
 }
@@ -171,11 +175,11 @@ uploadArchives {
             beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
             repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: hasProperty('ossrhUsername')?ossrhUsername:'', password: hasProperty('ossrhPassword')?ossrhPassword:'')
+                authentication(userName: ossrhUsername, password: ossrhPassword)
             }
 
             snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: hasProperty('ossrhUsername')?ossrhUsername:'', password: hasProperty('ossrhPassword')?ossrhPassword:'')
+                authentication(userName: ossrhUsername, password: ossrhPassword)
             }
             
             pom.project {
