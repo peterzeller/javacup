@@ -3,3 +3,5 @@ classes/
 .gradle/
 version.txt
 *.iml
+build/
+src-generated/

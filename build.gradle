@@ -65,15 +65,17 @@ task genCup {
     String spec = "$projectDir/cup/parser.cup"
     inputs.file(spec)
     outputs.file("$gen/java_cup/parser.java")
-    ant.cup(
-        srcfile: spec,
-        'interface': 'on',
-        destdir: gen,
-        parser: 'parser',
-        symbols: 'sym',
-        quiet: 'false',
-        nonterms: 'true'
-    )
+    doLast {
+        ant.cup(
+                srcfile: spec,
+                'interface': 'on',
+                destdir: gen,
+                parser: 'parser',
+                symbols: 'sym',
+                quiet: 'false',
+                nonterms: 'true'
+        )
+    }
 }
 
 
@@ -81,10 +83,12 @@ task genJflex {
     String spec = "$projectDir/flex/Lexer.jflex"
     inputs.file(spec)
     outputs.file("$gen/java_cup/Lexer.java")
-    ant.jflex(
-            file: spec,
-            destdir: gen
-    )
+    doLast {
+        ant.jflex(
+                file: spec,
+                destdir: gen
+        )
+    }
 }
 
 task genVersion {
