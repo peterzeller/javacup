@@ -5,7 +5,7 @@ package java_cup.runtime;
  * implementation of <code>lr_parser.scan()</code>.  Integration
  * of scanners implementing <code>Scanner</code> is facilitated.
  *
- * @author David MacMahon <davidm@smartsc.com>
+ * @author David MacMahon (davidm@smartsc.com)
  * @version last updated 23-Jul-1999
  */
 
@@ -21,7 +21,7 @@ package java_cup.runtime;
  ***************************************************/
 public interface Scanner {
     /**
-     * Return the next token, or <code>null</code> on end-of-file.
+     * Return the next token, or <code>null</code> on end-of-file.mb
      */
     public Symbol next_token() throws java.lang.Exception;
 }

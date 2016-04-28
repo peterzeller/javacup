@@ -1,0 +1,202 @@
+// Apply the java plugin to add support for Java
+apply plugin: 'java'
+
+// plugins for generating IDE projects
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+
+// plugins for publishing to maven:
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+// maven metadata:
+group = "com.github.peterzeller"
+version = "11c"
+
+
+String src = "$projectDir/src"
+String gen = "$projectDir/src-generated"
+String versionString = version
+String versionStamp = new Date().format('yyyyMMdd')
+
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly files("$projectDir/bin/java-cup-11.jar")
+    compileOnly files("$projectDir/bin/JFlex.jar")
+    compile 'org.apache.ant:ant:1.9.7'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir src
+            srcDir gen
+        }
+    }
+}
+
+
+
+
+// delete the generated sources on clean
+clean.doFirst {
+    delete gen
+}
+
+
+ant.taskdef(
+    name: 'cup',
+    classpath: configurations.compileOnly.asPath,
+    classname: 'java_cup.anttask.CUPTask'
+)
+
+ant.taskdef(
+        name: 'jflex',
+        classpath: configurations.compileOnly.asPath,
+        classname: 'JFlex.anttask.JFlexTask'
+)
+
+
+task genCup {
+    String spec = "$projectDir/cup/parser.cup"
+    inputs.file(spec)
+    outputs.file("$gen/java_cup/parser.java")
+    ant.cup(
+        srcfile: spec,
+        'interface': 'on',
+        destdir: gen,
+        parser: 'parser',
+        symbols: 'sym',
+        quiet: 'false',
+        nonterms: 'true'
+    )
+}
+
+
+task genJflex {
+    String spec = "$projectDir/flex/Lexer.jflex"
+    inputs.file(spec)
+    outputs.file("$gen/java_cup/Lexer.java")
+    ant.jflex(
+            file: spec,
+            destdir: gen
+    )
+}
+
+task genVersion {
+    inputs.file("$projectDir/version.java")
+    outputs.file("$gen/java_cup/version.java")
+    ant.copy(file: "$projectDir/version.java", todir: "$gen/java_cup/")
+    ant.replace(
+            file: "$gen/java_cup/version.java",
+            token: "+ version_str",
+            value: "+ \"v0.${versionString} ${versionStamp}\""
+
+    )
+}
+
+
+task generateSources
+
+generateSources.dependsOn genCup
+generateSources.dependsOn genJflex
+generateSources.dependsOn genVersion
+
+compileJava.dependsOn generateSources
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from 'build/docs/javadoc'
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task runtimeJar(type: Jar, dependsOn: javadoc) {
+    appendix = "runtime"
+    from sourceSets.main.allSource
+    includes = ["java_cup/runtime/*"]
+}
+
+task javadocRuntimeJar(type: Jar, dependsOn: javadoc) {
+    appendix = "runtime"
+    classifier = 'javadoc'
+    from 'build/docs/javadoc'
+}
+
+task sourcesRuntimeJar(type: Jar) {
+    appendix = "runtime"
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+
+artifacts {
+    archives jar
+    archives javadocJar
+    archives sourcesJar
+
+    archives runtimeJar
+    archives javadocRuntimeJar
+    archives sourcesRuntimeJar
+}
+
+
+signing {
+    sign configurations.archives
+}
+
+// task for uploading archives to maven:
+// taken from http://jedicoder.blogspot.de/2011/11/automated-gradle-project-deployment-to.html
+// taken from http://central.sonatype.org/pages/gradle.html
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            pom.project {
+                name 'Java Cup'
+                packaging 'jar'
+                description 'Java '
+                url 'https://github.com/peterzeller/javacup'
+
+                scm {
+                    url 'scm:https://github.com/peterzeller/javacup.git'
+                    connection 'scm:https://github.com/peterzeller/javacup.git'
+                    developerConnection 'scm:https://github.com/peterzeller/javacup.git'
+                }
+
+                // TODO license
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'repo'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'pzeller'
+                        name 'Peter Zeller'
+                        email 'p_zeller@cs.uni-kl.de'
+                    }
+                }
+            }
+        }
+    }
+}

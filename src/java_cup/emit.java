@@ -50,7 +50,7 @@ import java.util.Stack;
  *
  * @author Scott Hudson
  * @version last update: 11/25/95
- * @see java_cup.main
+ * @see java_cup.Main
  */
 
 /* Major externally callable routines here include:

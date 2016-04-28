@@ -499,7 +499,7 @@ public abstract class lr_parser {
     /**
      * Translates numerical symbol ids to the (non)terminal names from the spec
      *
-     * @param internal id for (non)terminal
+     * @param id id for (non)terminal
      * @return (non)terminal name as string
      */
     public String symbl_name_from_id(int id) {

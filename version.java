@@ -5,9 +5,9 @@ package java_cup;
  * It contains only static data elements and basically just a central
  * place to put this kind of information so it can be updated easily
  * for each release.
- * <p>
+ *
  * Version numbers used here are broken into 3 parts: major, minor, and
- * update, and are written as v<major>.<minor>.<update> (e.g. v0.10a).
+ * update, and are written as v[major].[minor].[update] (e.g. v0.10a).
  * Major numbers will change at the time of major reworking of some
  * part of the system.  Minor numbers for each public release or
  * change big enough to cause incompatibilities.  Finally update
