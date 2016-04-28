@@ -30,6 +30,10 @@ dependencies {
     compile 'org.apache.ant:ant:1.9.7'
 }
 
+configurations{
+  runtimeArchives
+}
+
 sourceSets {
     main {
         java {
@@ -123,19 +127,19 @@ task sourcesJar(type: Jar) {
 }
 
 task runtimeJar(type: Jar, dependsOn: javadoc) {
-    appendix = "runtime"
+    name = "javacup-runtime"
     from sourceSets.main.allSource
     includes = ["java_cup/runtime/*"]
 }
 
 task javadocRuntimeJar(type: Jar, dependsOn: javadoc) {
-    appendix = "runtime"
+    name = "javacup-runtime"
     classifier = 'javadoc'
     from 'build/docs/javadoc'
 }
 
 task sourcesRuntimeJar(type: Jar) {
-    appendix = "runtime"
+    name = "javacup-runtime"
     classifier = 'sources'
     from sourceSets.main.allSource
 }
@@ -146,15 +150,17 @@ artifacts {
     archives javadocJar
     archives sourcesJar
 
-    archives runtimeJar
-    archives javadocRuntimeJar
-    archives sourcesRuntimeJar
+    runtimeArchives runtimeJar
+    runtimeArchives javadocRuntimeJar
+    runtimeArchives sourcesRuntimeJar
 }
 
 
 signing {
     sign configurations.archives
+    sign configurations.runtimeArchives
 }
+
 
 // task for uploading archives to maven:
 // taken from http://jedicoder.blogspot.de/2011/11/automated-gradle-project-deployment-to.html
@@ -165,13 +171,13 @@ uploadArchives {
             beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
             repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
+                authentication(userName: hasProperty('ossrhUsername')?ossrhUsername:'', password: hasProperty('ossrhPassword')?ossrhPassword:'')
             }
 
             snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
+                authentication(userName: hasProperty('ossrhUsername')?ossrhUsername:'', password: hasProperty('ossrhPassword')?ossrhPassword:'')
             }
-
+            
             pom.project {
                 name 'Java Cup'
                 packaging 'jar'
@@ -201,6 +207,17 @@ uploadArchives {
                     }
                 }
             }
+            /*
+            addFilter('generator') {artifact, file ->
+                artifact.appendix != 'runtime'
+            }
+            addFilter('runtime') {artifact, file ->
+                artifact.appendix == 'runtime'
+            }
+
+            pom('generator').name = "javaacup"
+            pom('runtime').name = "javaacup-runtime"*/
         }
     }
 }
+
