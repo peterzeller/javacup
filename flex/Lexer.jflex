@@ -16,18 +16,20 @@ import java.io.IOException;
 %column
 %cup
 %{
-    public Lexer(ComplexSymbolFactory sf){
+    public Lexer(String unit, ComplexSymbolFactory sf){
 	this(new InputStreamReader(System.in));
         symbolFactory = sf;
+        this.unit = unit;
     }
     private StringBuffer sb;
     private ComplexSymbolFactory symbolFactory;
+    private String unit;
     private int csline,cscolumn;
     public Symbol symbol(String name, int code){
-	return symbolFactory.newSymbol(name, code,new Location(yyline+1,yycolumn+1-yylength()),new Location(yyline+1,yycolumn+1));
+	return symbolFactory.newSymbol(name, code,new Location(unit, yyline+1,yycolumn+1-yylength()),new Location(unit, yyline+1,yycolumn+1));
     }
     public Symbol symbol(String name, int code, String lexem){
-	return symbolFactory.newSymbol(name, code, new Location(yyline+1, yycolumn +1), new Location(yyline+1,yycolumn+yylength()), lexem);
+	return symbolFactory.newSymbol(name, code, new Location(unit, yyline+1, yycolumn +1), new Location(unit, yyline+1,yycolumn+yylength()), lexem);
     }
     protected void emit_warning(String message){
 	ErrorManager.getManager().emit_warning("Scanner at " + (yyline+1) + "(" + (yycolumn+1) + "): " + message);

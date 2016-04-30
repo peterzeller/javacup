@@ -1,5 +1,6 @@
 package java_cup;
 
+import java_cup.runtime.ComplexSymbolFactory;
 import java_cup.runtime.Symbol;
 
 import java.lang.reflect.Field;
@@ -48,7 +49,7 @@ public class ErrorManager {
 
     public void emit_fatal(String message, Symbol sym) {
         //System.err.println("Fatal at ("+sym.left+"/"+sym.right+")@"+convSymbol(sym)+" : "+message);
-        System.err.println("Fatal: " + message + " @ " + sym);
+        System.err.println("Fatal error in " + pos(sym) + " @ " + convSymbol(sym) + "\n" + message);
         fatals++;
     }
 
@@ -59,7 +60,7 @@ public class ErrorManager {
 
     public void emit_warning(String message, Symbol sym) {
 //        System.err.println("Warning at ("+sym.left+"/"+sym.right+")@"+convSymbol(sym)+" : "+message);
-        System.err.println("Fatal: " + message + " @ " + sym);
+        System.err.println("Warning in " + pos(sym) + " @ " + convSymbol(sym) + "\n" + message);
         warnings++;
     }
 
@@ -69,9 +70,18 @@ public class ErrorManager {
     }
 
     public void emit_error(String message, Symbol sym) {
-//        System.err.println("Error at ("+sym.left+"/"+sym.right+")@"+convSymbol(sym)+" : "+message);
-        System.err.println("Error: " + message + " @ " + sym);
+//        System.err.println("Error at ("+sym.left+""/"+sym.right+")@"+convSymbol(sym)+" : "+message);
+        System.err.println("Error in " + pos(sym) + " @ " + convSymbol(sym) + "\n" + message);
         errors++;
+    }
+
+    private String pos(Symbol sym) {
+        if (sym instanceof ComplexSymbolFactory.ComplexSymbol) {
+            ComplexSymbolFactory.ComplexSymbol s = (ComplexSymbolFactory.ComplexSymbol) sym;
+            return "line " + s.getLeft().getLine() + ", column " + s.getLeft().getColumn() + " of " + s.getLeft().getUnit();
+
+        }
+        return sym.left + "-" + sym.right;
     }
 
     private static String convSymbol(Symbol symbol) {

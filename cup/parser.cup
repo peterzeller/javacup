@@ -228,15 +228,15 @@ parser code {:
 
 /*---------------------------------------------------------------- */
 
-init with {: 
+/*init with {:
     ComplexSymbolFactory f = new ComplexSymbolFactory();
     symbolFactory = f;
     lexer = new Lexer(f); 
-:}
+:}*/
 /*lexer.init(); :};*/
-scan with {: 
+/*scan with {:
     return lexer.next_token(); 
-:};
+:};*/
 
 /*----------------------------------------------------------------*/ 
 

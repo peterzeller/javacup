@@ -131,6 +131,9 @@ public class Main {
      */
     protected static int expect_conflicts = 0;
 
+    /** the input filename */
+    private static String input_fileName;
+
   /* frankf added this 6/18/96 */
     /**
      * User option -- should generator generate code for left/right values?
@@ -449,7 +452,8 @@ public class Main {
             else if (!argv[i].startsWith("-") && i == len - 1) {
 	      /* use input from file. */
                 try {
-                    System.setIn(new FileInputStream(argv[i]));
+                    input_fileName = argv[i];
+                    System.setIn(new FileInputStream(input_fileName));
                 } catch (java.io.FileNotFoundException e) {
                     usage("Unable to open \"" + argv[i] + "\" for input");
                 }
@@ -543,7 +547,7 @@ public class Main {
 
       /* create a parser and parse with it */
         ComplexSymbolFactory csf = new ComplexSymbolFactory();
-        parser_obj = new parser(new Lexer(csf), csf);
+        parser_obj = new parser(new Lexer(input_fileName ,csf), csf);
         parser_obj.setDebugSymbols(opt_do_debugsymbols);
         try {
             if (opt_do_debug)

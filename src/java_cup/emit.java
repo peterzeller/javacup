@@ -995,7 +995,7 @@ public class emit {
         for (int i = 0; i < import_list.size(); i++)
             out.println("import " + import_list.elementAt(i) + ";");
         for (int i = 0; i < static_import_list.size(); i++)
-            out.println("import static" + static_import_list.elementAt(i) + ";");
+            out.println("import static " + static_import_list.elementAt(i) + ";");
         if (locations())
             out.println("import java_cup.runtime.ComplexSymbolFactory.Location;");
         out.println("import java_cup.runtime.XMLElement;");

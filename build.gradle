@@ -11,7 +11,7 @@ apply plugin: 'signing'
 
 // maven metadata:
 group = "com.github.peterzeller"
-version = "11c-SNAPSHOT"
+version = "11c1-SNAPSHOT"
 
 
 String src = "$projectDir/src"
@@ -25,7 +25,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly files("$projectDir/bin/java-cup-11.jar")
+    compileOnly files("$projectDir/bin/javacup-11c1.jar")
     compileOnly files("$projectDir/bin/JFlex.jar")
     compile 'org.apache.ant:ant:1.9.7'
 }
@@ -127,19 +127,19 @@ task sourcesJar(type: Jar) {
 }
 
 task runtimeJar(type: Jar, dependsOn: javadoc) {
-    name = "javacup-runtime"
-    from sourceSets.main.allSource
+    baseName = "javacup-runtime"
+    from sourceSets.main.output
     includes = ["java_cup/runtime/*"]
 }
 
 task javadocRuntimeJar(type: Jar, dependsOn: javadoc) {
-    name = "javacup-runtime"
+    baseName = "javacup-runtime"
     classifier = 'javadoc'
     from 'build/docs/javadoc'
 }
 
 task sourcesRuntimeJar(type: Jar) {
-    name = "javacup-runtime"
+    baseName = "javacup-runtime"
     classifier = 'sources'
     from sourceSets.main.allSource
 }
@@ -150,9 +150,9 @@ artifacts {
     archives javadocJar
     archives sourcesJar
 
-    runtimeArchives runtimeJar
-    runtimeArchives javadocRuntimeJar
-    runtimeArchives sourcesRuntimeJar
+    // archives runtimeJar
+    // archives javadocRuntimeJar
+    // archives sourcesRuntimeJar
 }
 
 def isReleaseBuild() {
@@ -162,7 +162,7 @@ def isReleaseBuild() {
 signing {
     required { isReleaseBuild() && gradle.taskGraph.hasTask("uploadArchives") }
     sign configurations.archives
-    sign configurations.runtimeArchives
+    // sign configurations.runtimeArchives
 }
 
 
@@ -181,6 +181,8 @@ uploadArchives {
             snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
                 authentication(userName: ossrhUsername, password: ossrhPassword)
             }
+            
+            // repository(url : "file:///home/peter/temp/mvn/")
             
             pom.project {
                 name 'Java Cup'
@@ -211,16 +213,17 @@ uploadArchives {
                     }
                 }
             }
-            /*
-            addFilter('generator') {artifact, file ->
-                artifact.appendix != 'runtime'
+            
+            addFilter('generator') {artifact, file -> 
+                artifact.name == "javacup"
             }
-            addFilter('runtime') {artifact, file ->
-                artifact.appendix == 'runtime'
+            addFilter('runtime') {artifact, file -> 
+                artifact.name == "javacup-runtime"
             }
 
-            pom('generator').name = "javaacup"
-            pom('runtime').name = "javaacup-runtime"*/
+            pom('generator').name = "javacup"
+            pom('runtime').name = "javacup-runtime"
+            pom('runtime').dependencies.removeAll { it.scope == "compile" }
         }
     }
 }
