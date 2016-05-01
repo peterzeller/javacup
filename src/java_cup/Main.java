@@ -290,8 +290,13 @@ public class Main {
 
       /* do requested dumps */
         if (opt_dump_grammar) dump_grammar();
-        if (opt_dump_states) dump_machine();
+        if (opt_dump_states) {
+            dump_machine();
+            machineToDot();
+        }
         if (opt_dump_tables) dump_tables();
+
+
 
         dump_end = System.currentTimeMillis();
 
@@ -892,36 +897,40 @@ public class Main {
      * Produce a human readable dump of the grammar.
      */
     public static void dump_grammar() throws internal_error {
-        System.err.println("===== Terminals =====");
-        for (int tidx = 0, cnt = 0; tidx < terminal.number(); tidx++, cnt++) {
-            System.err.print("[" + tidx + "]" + terminal.find(tidx).name() + " ");
-            if ((cnt + 1) % 5 == 0) System.err.println();
-        }
-        System.err.println();
-        System.err.println();
+        try (PrintWriter out = new PrintWriter(new FileWriter(dest_dir + "/grammar.txt"))) {
+            out.println("===== Terminals =====");
+            for (int tidx = 0, cnt = 0; tidx < terminal.number(); tidx++, cnt++) {
+                out.print("[" + tidx + "]" + terminal.find(tidx).name() + " ");
+                if ((cnt + 1) % 5 == 0) out.println();
+            }
+            out.println();
+            out.println();
 
-        System.err.println("===== Non terminals =====");
-        for (int nidx = 0, cnt = 0; nidx < non_terminal.number(); nidx++, cnt++) {
-            System.err.print("[" + nidx + "]" + non_terminal.find(nidx).name() + " ");
-            if ((cnt + 1) % 5 == 0) System.err.println();
-        }
-        System.err.println();
-        System.err.println();
+            out.println("===== Non terminals =====");
+            for (int nidx = 0, cnt = 0; nidx < non_terminal.number(); nidx++, cnt++) {
+                out.print("[" + nidx + "]" + non_terminal.find(nidx).name() + " ");
+                if ((cnt + 1) % 5 == 0) out.println();
+            }
+            out.println();
+            out.println();
 
 
-        System.err.println("===== Productions =====");
-        for (int pidx = 0; pidx < production.number(); pidx++) {
-            production prod = production.find(pidx);
-            System.err.print("[" + pidx + "] " + prod.lhs().the_symbol().name() + " ::= ");
-            for (int i = 0; i < prod.rhs_length(); i++)
-                if (prod.rhs(i).is_action())
-                    System.err.print("{action} ");
-                else
-                    System.err.print(
-                            ((symbol_part) prod.rhs(i)).the_symbol().name() + " ");
-            System.err.println();
+            out.println("===== Productions =====");
+            for (int pidx = 0; pidx < production.number(); pidx++) {
+                production prod = production.find(pidx);
+                out.print("[" + pidx + "] " + prod.lhs().the_symbol().name() + " ::= ");
+                for (int i = 0; i < prod.rhs_length(); i++)
+                    if (prod.rhs(i).is_action())
+                        out.print("{action} ");
+                    else
+                        out.print(
+                                ((symbol_part) prod.rhs(i)).the_symbol().name() + " ");
+                out.println();
+            }
+            out.println();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        System.err.println();
     }
 
   /*. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .*/
@@ -931,6 +940,31 @@ public class Main {
      * recognition state machine.
      */
     public static void dump_machine() {
+        try (PrintWriter out = new PrintWriter(new FileWriter(dest_dir + "/machine.txt"))) {
+            lalr_state ordered[] = new lalr_state[lalr_state.number()];
+
+      /* put the states in sorted order for a nicer display */
+            for (Enumeration s = lalr_state.all(); s.hasMoreElements(); ) {
+                lalr_state st = (lalr_state) s.nextElement();
+                ordered[st.index()] = st;
+            }
+
+            out.println("===== Viable Prefix Recognizer =====");
+            for (int i = 0; i < lalr_state.number(); i++) {
+                if (ordered[i] == start_state) out.print("START ");
+                out.println(ordered[i]);
+                out.println("-------------------");
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+	/**
+     * prints the LALR state machine to a dot file
+     */
+    public static void machineToDot() {
         lalr_state ordered[] = new lalr_state[lalr_state.number()];
 
       /* put the states in sorted order for a nicer display */
@@ -939,11 +973,45 @@ public class Main {
             ordered[st.index()] = st;
         }
 
-        System.err.println("===== Viable Prefix Recognizer =====");
-        for (int i = 0; i < lalr_state.number(); i++) {
-            if (ordered[i] == start_state) System.err.print("START ");
-            System.err.println(ordered[i]);
-            System.err.println("-------------------");
+        try (PrintWriter out = new PrintWriter(new FileWriter(dest_dir + "/lalr_machine.dot"))) {
+            out.println("// compile using graphviz: ");
+            out.println("// dot lalr_machine.dot -Tsvg -o lalr_machine.svg");
+            out.println("// fdp lalr_machine.dot -Tsvg -o lalr_machine.svg");
+            out.println("// neato lalr_machine.dot -Tsvg -o lalr_machine.svg");
+            out.println("digraph g {");
+            out.println("   overlap = false;");
+            out.println("   splines = true;");
+            out.println("// ===== Viable Prefix Recognizer =====");
+            for (int i = 0; i < lalr_state.number(); i++) {
+                lalr_state state = ordered[i];
+                if (state == start_state) {
+                    out.println("// START ");
+                }
+                out.println("\"node" + i + "\" [");
+                out.print("   label =\"" + i + "\\l");
+                lalr_item_set items = state._items;
+                for (Object o_item : items._all.values()) {
+                    lalr_item item = (lalr_item) o_item;
+                    out.print(item+"\\l");
+                }
+
+                out.println("\"\n");
+                out.println("   shape =\"rect\"");
+                out.println("];");
+
+                for (lalr_transition transition = state.transitions(); transition != null; transition = transition.next()) {
+                    out.println("node" + i + " -> node" + transition.to_state().index() + " [ label=\"" + transition.on_symbol().name() + "\"];");
+                }
+//                result = "transition on " + on_symbol().name() + " to state [";
+//                result += _to_state.index();
+//                result += "]";
+
+                out.println("//-------------------");
+            }
+
+            out.println("}");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -953,8 +1021,12 @@ public class Main {
      * Produce a (semi-) human readable dumps of the parse tables
      */
     public static void dump_tables() {
-        System.err.println(action_table);
-        System.err.println(reduce_table);
+        try (PrintWriter out = new PrintWriter(new FileWriter(dest_dir + "/tables.txt"))) {
+            out.println(action_table);
+            out.println(reduce_table);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
   /*-----------------------------------------------------------*/
